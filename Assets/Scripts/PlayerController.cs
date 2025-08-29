@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
@@ -10,13 +11,23 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 5f;
     public float jumpForce = 12f;
 
+    public UIDocument uiDocument; // arraste o PlayerUI aqui no Inspector
+
     private Rigidbody2D rb;
     private bool isGrounded = false;
     private bool isDead = false;
 
+    private Label timeLabel;
+    private float elapsedTime = 0f;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (uiDocument != null)
+        {
+            timeLabel = uiDocument.rootVisualElement.Q<Label>("TimeLabel");
+        }
     }
 
     void Update()
@@ -25,8 +36,15 @@ public class PlayerController : MonoBehaviour
 
         if (!isDead && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow)) && isGrounded)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); 
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); // corrigido de linearVelocity
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        }
+
+        // Atualiza o tempo apenas se o jogador não morreu
+        if (!isDead && timeLabel != null)
+        {
+            elapsedTime += Time.deltaTime;
+            timeLabel.text = "Tempo: " + Mathf.FloorToInt(elapsedTime).ToString();
         }
 
         if (isDead && Input.GetKeyDown(KeyCode.R))
@@ -62,7 +80,8 @@ public class PlayerController : MonoBehaviour
             Time.timeScale = 0f;
 
             // Mensagem de restart
-            Debug.Log("Voc� morreu! Pressione R para reiniciar.");
+            if (timeLabel != null)
+                timeLabel.text += "\nVocê morreu! Pressione R para reiniciar.";
         }
     }
 
